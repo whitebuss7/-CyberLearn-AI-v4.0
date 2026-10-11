@@ -1,22 +1,4 @@
 #!/usr/bin/env python3
-"""
-╔══════════════════════════════════════════════════════════════════╗
-║   CyberLearn AI v4.0 - Otonom İnternet Tarayan Yapay Zeka       ║
-║   Kendi başına gezer, okur, öğrenir ve sürekli yeni site keşfeder║
-╚══════════════════════════════════════════════════════════════════╝
-
-KURULUM:
-  pip install requests colorama rich beautifulsoup4 lxml
-  ollama pull llama3.2
-  python cyber_ai_autonomous.py
-
-SİTE VERMEK İÇİN (3 yol):
-  1) siteler.txt dosyasına her satıra bir URL yaz (çalışırken de okunur)
-  2) Programda:  site ekle https://ornek.com      (tek sayfa için sonuna "tek")
-  3) Programda:  oku https://ornek.com/sayfa      (hemen oku + özetle)
-  Ayrıca sohbette bir soruya URL yapıştırırsan o sayfayı okuyup cevaplar.
-"""
-
 import base64
 import hashlib
 import json
@@ -50,12 +32,12 @@ except ImportError as e:
     sys.exit(1)
 
 try:
-    import lxml  # noqa: F401
+    import lxml 
     PARSER = "lxml"
 except ImportError:
     PARSER = "html.parser"
 
-try:  # Windows konsolunda emoji/Türkçe karakter sorunu olmasın
+try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
     pass
@@ -63,27 +45,27 @@ except Exception:
 init(autoreset=True)
 console = Console()
 
-# ── Ayarlar ──────────────────────────────────────────────────────
+
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 MODEL = os.environ.get("CYBER_MODEL", "llama3.2")
 MEMORY_FILE = "cyber_brain.json"
 LOG_FILE = "cyber_log.txt"
 SITELER_DOSYA = "siteler.txt"
 
-OLLAMA_TIMEOUT = 120         # sn
-SAYFA_BEKLEME = 1.5          # iki sayfa arası bekleme (sn)
-DOMAIN_BEKLEME = 2.0         # aynı siteye iki istek arası min. süre (sn)
-MAX_BAYT = 1_500_000         # bir sayfadan en fazla okunacak bayt
-MIN_PUAN = 12                # bunun altındaki sayfalar siber güvenlikle ilgisiz sayılır
-MAX_DOMAIN_SAYFA = 25        # normal bir domainden en fazla kaç sayfa (çeşitlilik için)
-MAX_KULLANICI_DOMAIN_SAYFA = 150   # senin verdiğin siteler için limit
+OLLAMA_TIMEOUT = 120
+SAYFA_BEKLEME = 1.5
+DOMAIN_BEKLEME = 2.0
+MAX_BAYT = 1_500_000
+MIN_PUAN = 12 
+MAX_DOMAIN_SAYFA = 25 
+MAX_KULLANICI_DOMAIN_SAYFA = 150
 MAX_KUYRUK = 4000
-MAX_BILGI_ALAN = 400         # her alanda tutulacak en fazla bilgi
-KAYIT_ARALIK = 15            # sn — diske en sık bu aralıkla yaz
-KESIF_ARALIK = 90            # sn — en geç bu sürede bir yeni site keşfet
-KESIF_SORGU_SAYISI = 2       # her keşifte kaç arama sorgusu
-YENILEME_SAAT = 6            # haber sitelerini kaç saatte bir yeniden oku
-ROBOTS_UYGULA = True         # robots.txt'e uy (kendi verdiğin siteler hariç)
+MAX_BILGI_ALAN = 400
+KAYIT_ARALIK = 15
+KESIF_ARALIK = 90
+KESIF_SORGU_SAYISI = 2
+YENILEME_SAAT = 6
+ROBOTS_UYGULA = True
 
 HEADERS = {
     "User-Agent": (
@@ -95,7 +77,7 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
 
-# ── Başlangıç tohumları ──────────────────────────────────────────
+
 TOHUM_SITELER = [
     "https://portswigger.net/web-security",
     "https://owasp.org/www-project-top-ten/",
@@ -120,7 +102,7 @@ TOHUM_SITELER = [
     "https://github.com/topics/security-tools",
 ]
 
-# ── Kali Linux araçları — kategorilere göre, öğrenme sırası bunlardan gelir ──
+
 KALI_ARACLARI = {
     "bilgi_toplama": [
         "nmap", "masscan", "netdiscover", "arp-scan", "nbtscan", "dnsenum",
@@ -194,8 +176,7 @@ KALI_DOC_URLS = [
     "https://www.hackingarticles.in/",
 ]
 
-# Sürekli yeni link üreten sayfalar: belirli aralıkla tekrar okunur
-# → dış sitelere giden yeni makale linkleri = sürekli yeni domain keşfi
+
 YENILE_SITELERI_HAM = [
     "https://thehackernews.com/",
     "https://www.bleepingcomputer.com/",
@@ -210,7 +191,7 @@ YENILE_SITELERI_HAM = [
     "https://github.com/topics/security-tools",
 ]
 
-# Keşif için konu havuzu (LLM'in ürettiği sorgulara ek / yedek)
+
 KONU_HAVUZU = [
     "buffer overflow", "heap exploitation basics", "reverse engineering malware",
     "network packet analysis", "web application firewall evasion detection",
@@ -231,7 +212,7 @@ KONU_HAVUZU = [
 EK_KELIMELER = ["tutorial", "writeup", "case study", "explained", "walkthrough",
                 "cheat sheet", "lab", "research blog", "best practices", "analysis"]
 
-# ── Anahtar kelimeler ────────────────────────────────────────────
+
 SIBER_KELIMELER = {
     "yüksek": [
         "sql injection", "xss", "cross-site", "csrf", "ssrf", "rce", "lfi", "rfi",
@@ -284,10 +265,6 @@ IPUCU_RE = re.compile(
     r"malware|forensic|infosec|cve|vuln|threat|attack|cyber", re.I)
 URL_RE = re.compile(r"https?://[^\s<>\"')\]]+")
 
-
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                        YARDIMCI FONKSİYONLAR                    ║
-# ╚══════════════════════════════════════════════════════════════════╝
 
 def _kelime_regex(terimler, cogul=True):
     """Kelime sınırlı (ids → 'provides' içinde eşleşmez) regex üretir."""
@@ -353,11 +330,6 @@ def url_duzelt(s: str) -> str:
 
 YENILE_SITELERI = {url_temizle(u) for u in YENILE_SITELERI_HAM}
 
-
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                        LOG SİSTEMİ                             ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 class Log:
     def __init__(self):
         self.lg = logging.getLogger("cyberlearn")
@@ -376,10 +348,6 @@ class Log:
 log = Log()
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                      BEYİN (BELLEK)                            ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 class Beyin:
     """Thread-safe bellek. Tüm erişimler RLock ile korunur, diske atomik yazılır."""
 
@@ -387,13 +355,13 @@ class Beyin:
         self._kilit = threading.RLock()
         self.son_kayit = 0.0
         self.kirli = False
-        self.kuyruk = {}          # url -> (oncelik, domain)
+        self.kuyruk = {}
         self._idler = set()
-        self._kdom = {}           # kullanıcı domainleri -> derin mi
+        self._kdom = {}
         self.veri = self._yukle()
         self._duzenle()
 
-    # ── yükleme / kayıt ──────────────────────────────────────────
+    
     @staticmethod
     def _varsayilan():
         return {
@@ -412,7 +380,7 @@ class Beyin:
                 with open(MEMORY_FILE, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
-                # Eskiden bozuk dosya sessizce üzerine yazılıp bellek kaybediliyordu
+                
                 yedek = f"{MEMORY_FILE}.bozuk.{int(time.time())}"
                 try:
                     os.replace(MEMORY_FILE, yedek)
@@ -431,7 +399,7 @@ class Beyin:
                 self.veri["stats"].setdefault(k, v)
 
             zi = self.veri["ziyaret_edilen"]
-            if isinstance(zi, list):                       # v3 → v4
+            if isinstance(zi, list):                       
                 self.veri["ziyaret_edilen"] = {u: 0 for u in zi}
                 for u in zi:
                     d = self.veri["domainler"].setdefault(
@@ -455,7 +423,7 @@ class Beyin:
             try:
                 with open(tmp, "w", encoding="utf-8") as f:
                     json.dump(self.veri, f, ensure_ascii=False)
-                os.replace(tmp, MEMORY_FILE)   # atomik: yarım yazılmış dosya kalmaz
+                os.replace(tmp, MEMORY_FILE)   
                 self.kirli = False
                 self.son_kayit = time.time()
             except Exception as e:
@@ -470,7 +438,7 @@ class Beyin:
             self.kirli = True
             self.kaydet(zorla=True)
 
-    # ── ziyaret & domain ─────────────────────────────────────────
+    
     def url_ziyaret_edildi_mi(self, url: str) -> bool:
         with self._kilit:
             return url in self.veri["ziyaret_edilen"]
@@ -500,7 +468,7 @@ class Beyin:
             x = self.veri["domainler"].get(d)
             return bool(x and x["hata"] >= 5 and x["basari"] == 0 and d not in self._kdom)
 
-    # ── kullanıcının verdiği siteler ─────────────────────────────
+    
     def _kdom_yenile(self):
         self._kdom = {}
         for u, ayar in self.veri["kullanici_siteleri"].items():
@@ -536,7 +504,7 @@ class Beyin:
         with self._kilit:
             return self._kdom.get(d, False)
 
-    # ── kuyruk ───────────────────────────────────────────────────
+    
     def url_kuyrug_ekle(self, url: str, oncelik=0, yenile=False) -> bool:
         url = url_temizle(url)
         if not url:
@@ -552,7 +520,7 @@ class Beyin:
             if self.domain_bozuk_mu(d):
                 return False
             self.kuyruk[url] = (oncelik, d)
-            if len(self.kuyruk) > MAX_KUYRUK:       # en düşük öncelikliler atılır
+            if len(self.kuyruk) > MAX_KUYRUK:
                 sirali = sorted(self.kuyruk.items(), key=lambda x: x[1][0])
                 for u, _ in sirali[:500]:
                     del self.kuyruk[u]
@@ -575,7 +543,7 @@ class Beyin:
             self.kirli = True
             return en_iyi
 
-    # ── bilgi ────────────────────────────────────────────────────
+    
     def bilgi_ekle(self, alan: str, bilgi: str, kaynak: str = "") -> bool:
         bilgi = bilgi.strip()
         if len(bilgi) < 30:
@@ -588,7 +556,7 @@ class Beyin:
             lst.append({"id": kid, "bilgi": bilgi[:600], "kaynak": kaynak[:150],
                         "tarih": datetime.now().strftime("%Y-%m-%d %H:%M")})
             self._idler.add(kid)
-            while len(lst) > MAX_BILGI_ALAN:        # sınırsız şişmesin
+            while len(lst) > MAX_BILGI_ALAN:
                 self._idler.discard(lst.pop(0).get("id"))
             self.veri["stats"]["toplam_bilgi"] += 1
             self.veri["stats"]["toplam_karakter"] += len(bilgi)
@@ -619,9 +587,8 @@ class Beyin:
             self.kirli = True
 
     def ilgili_bul(self, soru: str, limit=6) -> list:
-        # Eski sürümde len>3 filtresi "xss", "sql", "rce" gibi kelimeleri atıyordu
         kelimeler = [k for k in re.findall(r"\w+", soru.lower()) if len(k) > 2]
-        stemler = list({k[:5] if len(k) > 5 else k for k in kelimeler})   # kaba Türkçe ek toleransı
+        stemler = list({k[:5] if len(k) > 5 else k for k in kelimeler})
         if not stemler:
             return []
         sonuc = []
@@ -632,7 +599,6 @@ class Beyin:
                     puan = sum(1 for s in stemler if s in bl)
                     if puan > 0:
                         sonuc.append((puan, alan, b["bilgi"], b.get("kaynak", "")))
-            # Kali aracı tam adı sorulduysa yapılandırılmış veriyi de öne çıkar
             for arac, v in self.veri["kali_araclari"].items():
                 if arac.lower() in soru.lower():
                     ozet = (f"[KALI:{arac}] {v.get('aciklama','')[:140]} | "
@@ -640,8 +606,6 @@ class Beyin:
                     sonuc.append((10, "kali_araclari", ozet, v.get("kaynak", "kali.org")))
         sonuc.sort(key=lambda x: x[0], reverse=True)
         return sonuc[:limit]
-
-    # ── Kali araçları ────────────────────────────────────────────
     def kali_arac_ogrendi_mi(self, arac: str) -> bool:
         with self._kilit:
             return arac in self.veri["kali_araclari"]
@@ -673,9 +637,6 @@ class Beyin:
             }
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                     WEB GEZGİNİ (CRAWLER)                      ║
-# ╚══════════════════════════════════════════════════════════════════╝
 
 @dataclass
 class Sayfa:
@@ -683,7 +644,7 @@ class Sayfa:
     ok: bool = False
     baslik: str = ""
     metin: str = ""
-    linkler: list = field(default_factory=list)   # [(url, anchor_metni)]
+    linkler: list = field(default_factory=list)
     puan: int = 0
     hata: str = ""
 
@@ -777,7 +738,7 @@ class WebGezgini:
                         break
                 son_url = r.url
         except requests.exceptions.SSLError:
-            sayfa.hata = "SSL sertifika hatası"       # verify=False artık kullanılmıyor (güvensizdi)
+            sayfa.hata = "SSL sertifika hatası"
             return sayfa
         except requests.exceptions.Timeout:
             sayfa.hata = "zaman aşımı"
@@ -793,7 +754,7 @@ class WebGezgini:
             sayfa.url = son_url or url
             soup = BeautifulSoup(bytes(veri), PARSER)
             sayfa.baslik = (soup.title.get_text(" ", strip=True) if soup.title else "")[:150]
-            sayfa.linkler = self._linkleri_cek(soup, son_url)      # temizlemeden ÖNCE (nav linkleri değerli)
+            sayfa.linkler = self._linkleri_cek(soup, son_url)      
             for tag in soup(["script", "style", "nav", "footer", "header", "aside",
                              "form", "iframe", "noscript", "svg", "img"]):
                 tag.decompose()
@@ -805,7 +766,7 @@ class WebGezgini:
             sayfa.hata = f"ayrıştırma hatası: {str(e)[:80]}"
         return sayfa
 
-    # ── arama motorları ──────────────────────────────────────────
+  
     def _ddg(self, sorgu: str) -> list:
         self._bekle("arama:ddg")
         r = self.session.get("https://html.duckduckgo.com/html/", params={"q": sorgu}, timeout=10)
@@ -826,7 +787,7 @@ class WebGezgini:
         urls = []
         for a in soup.select("li.b_algo h2 a"):
             href = a.get("href", "")
-            if "bing.com/ck/a" in href:               # yönlendirme linkini çöz
+            if "bing.com/ck/a" in href:
                 u = parse_qs(urlparse(href).query).get("u", [""])[0]
                 if u.startswith("a1"):
                     b = u[2:] + "=" * (-len(u[2:]) % 4)
@@ -859,15 +820,11 @@ class WebGezgini:
         return []
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                     OLLAMA AI MOTORU                           ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
 class OllamaAI:
     def __init__(self):
         self.model = MODEL
         self.hazir = False
-        self.sohbet_modu = threading.Event()   # sohbet sırasında arka plan öğrenme bekler
+        self.sohbet_modu = threading.Event()   
         self._kontrol()
 
     def _kontrol(self):
@@ -941,9 +898,7 @@ class OllamaAI:
             yield f"\nHata: {e}"
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                   OTONOM ÖĞRENME MOTORU                        ║
-# ╚══════════════════════════════════════════════════════════════════╝
+
 
 SITELER_SABLON = """# CyberLearn AI - Okunmasını istediğin siteler
 # Her satıra bir URL yaz. Program çalışırken bu dosyayı kaydedersen otomatik okunur.
@@ -984,8 +939,6 @@ class OtonomOgrenme:
             self.beyin.url_kuyrug_ekle(url, oncelik=10)
         for url in KALI_DOC_URLS:
             self.beyin.url_kuyrug_ekle(url, oncelik=10)
-
-    # ── senin verdiğin siteler ───────────────────────────────────
     def siteleri_yukle(self, zorla=False) -> int:
         p = Path(SITELER_DOSYA)
         try:
@@ -1028,7 +981,6 @@ class OtonomOgrenme:
         except Exception as e:
             log.yaz(f"siteler.txt güncellenemedi: {e}", "UYARI")
 
-    # ── analiz ───────────────────────────────────────────────────
     @staticmethod
     def _alani_tespit_et(metin: str, url: str) -> str:
         ml = metin[:6000].lower()
@@ -1102,7 +1054,6 @@ KONU: <sayfanın konusu, tek cümle>
         alan = self._alani_tespit_et(sayfa.metin, url)
         sonuc["alan"] = alan
 
-        # ── AI özeti ──
         ozet = self._ozet_cikar(sayfa)
         sonuc["ozet"] = ozet
         if ozet:
@@ -1113,7 +1064,6 @@ KONU: <sayfanın konusu, tek cümle>
                     if self.beyin.bilgi_ekle(alan, satir, kaynak=url):
                         sonuc["eklenen"] += 1
 
-        # ── ham metinden önemli cümleler ──
         n = 0
         for cumle in re.split(r"(?<=[.!?])\s+", sayfa.metin[:20000]):
             cumle = cumle.strip()
@@ -1124,7 +1074,6 @@ KONU: <sayfanın konusu, tek cümle>
                     if n >= 10:
                         break
 
-        # ── yeni linkler → kuyruk ──
         eklenen_link = 0
         for link, anchor in sayfa.linkler[:150]:
             if eklenen_link >= 40:
@@ -1135,11 +1084,11 @@ KONU: <sayfanın konusu, tek cümle>
             ayni = ld == d
             lp = siber_puan(anchor + " " + re.sub(r"[-_/.]", " ", link))
             if kullanici and derin and ayni:
-                onc = 50 + min(lp, 20)                  # verdiğin sitenin iç sayfaları öncelikli
+                onc = 50 + min(lp, 20)
             elif lp > 0 or IPUCU_RE.search(link):
                 onc = min(lp, 30) + (5 if not ayni else 0)
             elif not ayni and sayfa.puan >= 30:
-                onc = 3                                  # güçlü güvenlik sayfası → komşu siteleri de dene
+                onc = 3
             else:
                 continue
             if self.beyin.url_kuyrug_ekle(link, onc):
@@ -1156,8 +1105,6 @@ KONU: <sayfanın konusu, tek cümle>
     def _sorgu_uret(self) -> list:
         kullanilmis = {k.lower() for k in self.beyin.veri["konular"]}
         sorgular = []
-
-        # 1) LLM: o ana kadar öğrendiklerine bakıp YENİ konular önerir
         if self.ai.hazir and not self.ai.sohbet_modu.is_set():
             with self.beyin._kilit:
                 alanlar = ", ".join(f"{a}({len(b)})" for a, b in list(self.beyin.veri["bilgiler"].items())[:12])
@@ -1171,8 +1118,7 @@ Daha önce aranan sorguları tekrarlama. Her satıra yalnızca bir sorgu yaz; nu
                 s = re.sub(r"^[\s\-\*\d\.\)]+", "", satir).strip().strip('"\'')
                 if 8 <= len(s) <= 80 and s.lower() not in kullanilmis and re.fullmatch(r"[\w\s\-\+\.#/]+", s):
                     sorgular.append(s)
-
-        # 2) Yedek: havuz × ek kelime kombinasyonu (daha önce aranmamış)
+                  
         for _ in range(30):
             if len(sorgular) >= KESIF_SORGU_SAYISI:
                 break
@@ -1219,7 +1165,7 @@ Daha önce aranan sorguları tekrarlama. Her satıra yalnızca bir sorgu yaz; nu
                 if self.duraklatildi:
                     time.sleep(1)
                     continue
-                while self.ai.sohbet_modu.is_set() and self.aktif:   # sohbet öncelikli
+                while self.ai.sohbet_modu.is_set() and self.aktif:
                     time.sleep(0.5)
 
                 self.siteleri_yukle()
@@ -1230,7 +1176,6 @@ Daha önce aranan sorguları tekrarlama. Her satıra yalnızca bir sorgu yaz; nu
                     son_kesif = time.time()
                     self.kesif_yap()
 
-                # Her KALI_ORAN sayfada bir, kuyruğun yanı sıra bir Kali aracı da öğren
                 self._kali_sayac += 1
                 if self.kali and self.kali.ogrenilmemis_var() and self._kali_sayac % KALI_ORAN == 0:
                     self.kali.rastgele_ogren(sessiz=True)
@@ -1258,11 +1203,7 @@ Daha önce aranan sorguları tekrarlama. Her satıra yalnızca bir sorgu yaz; nu
         self.aktif = False
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                  KALİ ARAÇ ÖĞRENME MOTORU                     ║
-# ╚══════════════════════════════════════════════════════════════════╝
-
-KALI_ORAN = 4   # her 4 web sayfasından 1'i yerine bir Kali aracı öğrenilir
+KALI_ORAN = 4
 
 
 class KaliOgrenme:
@@ -1284,10 +1225,10 @@ class KaliOgrenme:
         self._kategori = {}
         for kat, liste in KALI_ARACLARI.items():
             for arac in liste:
-                self._kategori.setdefault(arac, kat)   # ilk gördüğü kategoriyi kullan
+                self._kategori.setdefault(arac, kat)
 
     def tum_araclar(self) -> list:
-        return list(self._kategori.items())   # [(arac, kategori), ...]
+        return list(self._kategori.items())
 
     def ogrenilmemis_araclar(self) -> list:
         return [(a, k) for a, k in self.tum_araclar() if not self.beyin.kali_arac_ogrendi_mi(a)]
@@ -1343,7 +1284,6 @@ Yalnızca şu JSON nesnesini döndür, başka hiçbir metin yazma:
         yanit = self.ai.sor(prompt, max_token=500)
         veri = self._ilk_json_nesnesi(yanit) if yanit else None
         if not isinstance(veri, dict) or not veri.get("aciklama"):
-            # Ollama kapalıysa / JSON üretemediyse "Hata: ..." gibi çöp ASLA kaydedilmez
             veri = {"aciklama": f"{arac} için otomatik özet üretilemedi; "
                                  f"{'web verisi toplandı, Ollama yanıtı eksik' if web_verisi else 'web verisi de bulunamadı'}.",
                     "kullanim": f"{arac} --help", "ornekler": [], "onemli_flagler": [], "senaryo": ""}
@@ -1370,9 +1310,6 @@ Yalnızca şu JSON nesnesini döndür, başka hiçbir metin yazma:
         return veri
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                      SOHBET MOTORU                             ║
-# ╚══════════════════════════════════════════════════════════════════╝
 
 class SohbetMotoru:
     SISTEM = (
@@ -1397,8 +1334,6 @@ class SohbetMotoru:
 
     def _yanitla(self, soru: str):
         kaynaklar = []
-
-        # 1) Mesajdaki URL'leri oku (verdiğin siteler)
         verilen = ""
         for u in list(dict.fromkeys(URL_RE.findall(soru)))[:2]:
             u = url_temizle(u.rstrip(".,;"))
@@ -1409,12 +1344,9 @@ class SohbetMotoru:
             if s.ok and len(s.metin) > 100:
                 verilen += f"\n[Kullanıcının verdiği sayfa: {s.baslik} | {u}]\n{s.metin[:2500]}\n"
                 kaynaklar.append(u)
-                self.beyin.url_kuyrug_ekle(u, 100, yenile=True)   # arka planda da öğrensin
+                self.beyin.url_kuyrug_ekle(u, 100, yenile=True)
             else:
                 verilen += f"\n[{u} okunamadı: {s.hata or 'boş içerik'}]\n"
-
-        # 2b) Sorudaki kelimeler bilinen bir Kali aracının tam adıyla eşleşiyorsa
-        #     (örn. "nmap nasıl kullanılır") yapılandırılmış detayı doğrudan ekle.
         kali_detay = ""
         if self.kali:
             kelimeler = set(re.findall(r"[\w-]+", soru.lower()))
@@ -1427,8 +1359,6 @@ class SohbetMotoru:
                                f"Kullanım: {v.get('kullanim','')}\n"
                                f"Örnekler: {'; '.join(v.get('ornekler', []))}\n"
                                f"Önemli flagler: {'; '.join(v.get('onemli_flagler', []))}\n")
-
-        # 2) Belleğ'den ilgili bilgiler
         bellek = ""
         ilgili = self.beyin.ilgili_bul(soru)
         if ilgili:
@@ -1438,7 +1368,6 @@ class SohbetMotoru:
                 if kaynak:
                     bellek += f"  Kaynak: {kaynak}\n"
 
-        # 3) Anlık web araması (kelime sınırlı eşleşme — eskiden "ids" her yerde tetikleniyordu)
         web = ""
         if not verilen and (YUKSEK_RE.search(soru.lower()) or ORTA_RE.search(soru.lower())):
             console.print("[dim cyan]  🌐 Güncel bilgi için internete bakılıyor...[/dim cyan]")
@@ -1447,7 +1376,7 @@ class SohbetMotoru:
                 if s.ok and len(s.metin) > 200:
                     web += f"\n[{u[:70]}]:\n{s.metin[:900]}\n"
                     kaynaklar.append(u)
-                    self.beyin.url_kuyrug_ekle(u, 18)           # sonra detaylı öğren
+                    self.beyin.url_kuyrug_ekle(u, 18)
 
         # 4) Mesajları kur
         mesajlar = [{"role": "system", "content": self.SISTEM}]
@@ -1472,9 +1401,6 @@ class SohbetMotoru:
         self.beyin.kaydet()
 
 
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                          ARAYÜZ                                ║
-# ╚══════════════════════════════════════════════════════════════════╝
 
 def canli_panel_goster(beyin: Beyin, ogrenme: OtonomOgrenme):
     s = beyin.istatistik()
@@ -1590,10 +1516,6 @@ def oku_sonuc_yazdir(s: dict):
         f"{esc(ozet)}",
         title="[bold green]✓ Sayfa okundu ve öğrenildi[/bold green]", border_style="green"))
 
-
-# ╔══════════════════════════════════════════════════════════════════╗
-# ║                        ANA PROGRAM                             ║
-# ╚══════════════════════════════════════════════════════════════════╝
 
 def ana():
     banner()
@@ -1815,7 +1737,7 @@ def ana():
                         ogrenme.duraklatildi = False
                         console.print("[green]✓ Bellek temizlendi, öğrenme baştan başladı.[/green]")
 
-                elif URL_RE.fullmatch(girdi):          # sadece URL yapıştırıldıysa → oku
+                elif URL_RE.fullmatch(girdi):
                     with console.status("[cyan]Okunuyor ve özetleniyor...[/cyan]"):
                         ai.sohbet_modu.set()
                         try:
@@ -1829,7 +1751,7 @@ def ana():
 
             except KeyboardInterrupt:
                 console.print("\n[yellow]İptal edildi.[/yellow]")
-            except Exception as e:                      # tek bir komut hatası programı kapatmasın
+            except Exception as e:
                 log.yaz(f"Komut hatası ({cmd}): {e}", "HATA")
                 console.print(f"[red]Hata: {esc(str(e))}[/red]")
     finally:
