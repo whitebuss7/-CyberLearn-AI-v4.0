@@ -221,11 +221,9 @@ Contributions, bug reports, feature requests, and improvements are welcome.
 
 No license has been specified yet.
 
-If you want others to use, modify, and redistribute your project, choose an appropriate open-source license and add its text in a `LICENSE` file.
-
 ## 👨‍💻 Author
 
-Created by **YOUR-NAME**
+Created by **Aİ**
 
 GitHub: https://github.com/YOUR-USERNAME
 
