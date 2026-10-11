@@ -46,8 +46,8 @@ Before running CyberLearn AI, make sure you have:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/CyberLearn-AI.git
-cd CyberLearn-AI
+git clone https://github.com/whitebuss7/-CyberLearn-AI-v4.0.git
+cd -CyberLearn-AI-v4.0
 ```
 
 Replace `YOUR-USERNAME` with your GitHub username and `CyberLearn-AI` with your repository name if different.
