@@ -1,0 +1,153 @@
+# CyberLearn AI — Autonomous Cybersecurity Learning Assistant
+
+CyberLearn AI is a Python-based cybersecurity learning assistant powered by locally running language models through Ollama. It automatically discovers cybersecurity resources, extracts relevant information, summarizes web pages, stores knowledge locally, and answers questions using its accumulated knowledge.
+
+The project also includes a Kali Linux tool learning module, persistent JSON-based memory, web search capabilities, and an interactive terminal interface.
+
+## Features
+
+* **Autonomous Learning:** Continuously explores cybersecurity-related websites and discovers new resources.
+* **AI-Powered Summarization:** Uses Ollama to summarize web content and extract useful technical information.
+* **Persistent Memory:** Stores learned information, visited URLs, summaries, statistics, and conversation history in a JSON file.
+* **Kali Linux Tool Database:** Collects and organizes information about security tools across multiple categories.
+* **Web Search:** Uses DuckDuckGo and Bing to discover additional cybersecurity resources.
+* **Domain Management:** Tracks visited domains and applies configurable page limits.
+* **Robots.txt Support:** Checks crawling permissions for automatically discovered websites.
+* **Request Rate Limiting:** Adds delays between requests to reduce unnecessary traffic.
+* **Interactive CLI:** Provides commands for searching, learning, inspecting memory, and managing websites.
+* **Live Statistics:** Displays learning progress, discovered domains, stored information, and tool coverage.
+* **Configurable Settings:** Supports environment variables for Ollama server configuration and model selection.
+
+## Technologies Used
+
+* Python 3
+* Ollama
+* Requests
+* BeautifulSoup4
+* lxml
+* Rich
+* Colorama
+* JSON
+* Threading and concurrent background processing
+
+## Installation
+
+### 1. Install Python Dependencies
+
+```bash
+pip install requests colorama rich beautifulsoup4 lxml
+```
+
+### 2. Install Ollama
+
+Download Ollama from:
+
+https://ollama.com/
+
+### 3. Download a Language Model
+
+```bash
+ollama pull llama3.2
+```
+
+### 4. Start Ollama
+
+```bash
+ollama serve
+```
+
+If Ollama is already running as a background service, you do not need to start it again.
+
+### 5. Run CyberLearn AI
+
+```bash
+python cyberlearn.py
+```
+
+Replace `cyberlearn.py` with the actual name of your Python file.
+
+## Configuration
+
+CyberLearn AI supports the following environment variables:
+
+| Variable      | Default                  | Description              |
+| ------------- | ------------------------ | ------------------------ |
+| `OLLAMA_URL`  | `http://localhost:11434` | Ollama API address       |
+| `CYBER_MODEL` | `llama3.2`               | Preferred language model |
+
+Example configuration on Linux:
+
+```bash
+export OLLAMA_URL="http://localhost:11434"
+export CYBER_MODEL="llama3.2"
+python cyberlearn.py
+```
+
+## Interactive Commands
+
+| Command               | Description                                   |
+| --------------------- | --------------------------------------------- |
+| `yardim`              | Display available commands                    |
+| `durum`               | Display learning statistics                   |
+| `oku <url>`           | Read and summarize a web page                 |
+| `site ekle <url>`     | Add a website to the learning queue           |
+| `site ekle <url> tek` | Add a single page without following its links |
+| `site sil <url>`      | Remove a user-added website                   |
+| `siteler`             | List configured websites                      |
+| `ara <topic>`         | Search for cybersecurity resources            |
+| `kesfet`              | Discover new topics and websites              |
+| `kali`                | List learned Kali Linux tools                 |
+| `kali <name>`         | Filter the tool database                      |
+| `arac <name>`         | Display information about a Kali Linux tool   |
+| `bilgiler`            | Display stored knowledge                      |
+| `ziyaretler`          | Show recently visited URLs                    |
+| `domainler`           | Show discovered domains                       |
+| `kuyruk`              | Display pending URLs                          |
+| `duraklat`            | Pause background learning                     |
+| `devam`               | Resume background learning                    |
+| `log`                 | Display recent log entries                    |
+| `temizle`             | Reset stored memory after confirmation        |
+| `cikis`               | Exit the application                          |
+
+## Project Files
+
+| File               | Purpose                                    |
+| ------------------ | ------------------------------------------ |
+| `cyberlearn.py`    | Main application                           |
+| `cyber_brain.json` | Persistent knowledge and application state |
+| `cyber_log.txt`    | Rotating application log                   |
+| `siteler.txt`      | User-configured learning sources           |
+
+The JSON memory and log files are generated at runtime. They do not need to exist before the first launch.
+
+## How It Works
+
+1. The application initializes Ollama and loads its persistent memory.
+2. It adds predefined cybersecurity resources and user-configured websites to a URL queue.
+3. The background learning thread selects URLs and retrieves eligible pages.
+4. The application extracts text, calculates a cybersecurity relevance score, and categorizes the content.
+5. Ollama generates summaries, which are stored in local memory.
+6. Relevant links are added to the queue, while search engines help discover additional resources.
+7. Users can query the assistant through the terminal and receive answers informed by stored knowledge and available web content.
+
+## Safety and Responsible Use
+
+CyberLearn AI is intended for cybersecurity education, authorized security research, and defensive learning.
+
+* Use the tool only with websites and systems you are authorized to access.
+* Respect website terms, crawling restrictions, and applicable rate limits.
+* Web content is treated as reference material, not as instructions to execute.
+* Verify AI-generated technical information before using it in real environments.
+* Tool descriptions and example commands should be reviewed before use.
+
+## Limitations
+
+* An Ollama-compatible local model must be available.
+* Some websites rely on JavaScript and may not expose their complete content to the HTML parser.
+* Search engine HTML structures and website layouts can change.
+* AI-generated summaries and tool descriptions may contain errors.
+* Learning progress depends on network availability, model performance, and source quality.
+
+## License
+
+Choose a license appropriate for your project before distributing it. For example, the MIT License can be used if you want to allow broad reuse under its terms.
