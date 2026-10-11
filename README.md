@@ -77,7 +77,7 @@ Make sure the Ollama service is running before launching the application.
 If your Python file is named `hell-.py`:
 
 ```bash
-python python cyberlearn_ai.py
+python cyberlearn_ai.py
 ```
 
 On some Linux systems, use `python3` instead of `python`.
